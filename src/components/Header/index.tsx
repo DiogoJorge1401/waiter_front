@@ -1,5 +1,5 @@
 import { Container, Content, HeaderDetails } from './styles';
-import logo from '../../assets/images/logo.svg';
+import logo from '@/assets/images/logo.svg';
 
 export const Header = () => {
   return (

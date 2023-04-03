@@ -1,5 +1,5 @@
+import { Boards } from './components/Boards';
 import { Header } from './components/Header';
-import { Orders } from './components/Orders';
 import { GlobalStyles } from './styles/GlobalStyles';
 
 export const App = () => {
@@ -7,7 +7,7 @@ export const App = () => {
     <>
       <GlobalStyles />
       <Header />
-      <Orders />
+      <Boards />
     </>
   );
 };
