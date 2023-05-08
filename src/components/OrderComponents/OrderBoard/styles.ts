@@ -7,7 +7,6 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 1.5rem;
 
   border: 1px solid rgba(204, 204, 204, 0.5);
@@ -21,7 +20,7 @@ export const BoardHeader = styled.header`
 
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 0.5rem;
 `;
 

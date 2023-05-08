@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Overlay = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
 
   display: flex;
@@ -16,7 +16,10 @@ export const Overlay = styled.div`
 
 export const ModalBody = styled.div`
   width: 31.25rem;
-  min-height: 31.25rem;
+  max-height: 31.25rem;
+  height: 100%;
+
+  overflow-y: auto;
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -101,6 +104,11 @@ export const Actions = styled.footer`
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+
+  > button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;
 
 export const PrimaryButton = styled.button`
@@ -124,10 +132,6 @@ export const PrimaryButton = styled.button`
   :hover {
     background: #222;
   }
-
-  :disabled {
-    cursor: not-allowed;
-  }
 `;
 
 export const SecondaryButton = styled.button`
@@ -143,9 +147,5 @@ export const SecondaryButton = styled.button`
 
   :hover {
     color: #b52b2b;
-  }
-
-  :disabled {
-    cursor: not-allowed;
   }
 `;

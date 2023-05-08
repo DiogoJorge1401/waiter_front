@@ -1,10 +1,11 @@
+import { app } from '@/api/app';
 import closeIcon from '@/assets/images/close-icon.svg';
 import { Order } from '@/types/Order';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useOrder } from '@/contexts/Order';
 import { OrderProduct } from '../OrderProduct';
 import {
-  PrimaryButton,
   Actions,
   ModalBody,
   ModalBodyHeader,
@@ -12,9 +13,11 @@ import {
   OrderItens,
   OrderTotal,
   Overlay,
-  StatusContainer,
+  PrimaryButton,
   SecondaryButton,
+  StatusContainer,
 } from './styles';
+import { toast } from 'react-toastify';
 
 type OrderModalProps = {
   isOpen: boolean;
@@ -24,6 +27,30 @@ type OrderModalProps = {
   onRequestClose: () => void;
 };
 
+const ACTIONS = {
+  WAITING: {
+    emoji: '🧑‍🍳',
+    text: 'Iniciar Preparo',
+    nextStatus: 'IN_PRODUCTION',
+  },
+  IN_PRODUCTION: {
+    emoji: '🚚',
+    text: 'Finalizar Pedido',
+    nextStatus: 'DONE',
+  },
+  DONE: {
+    emoji: '✅',
+    text: '',
+    nextStatus: '',
+  },
+};
+
+const ORDER_CANCELLED_MESSAGE = (table: string) =>
+  `O pedido da mesa ${table} foi cancelado!`;
+
+const ORDER_MOVED_MESSAGE = (table: string) =>
+  `O pedido da mesa ${table} foi movido!`;
+
 export const OrderModal = ({
   isOpen,
   order,
@@ -31,7 +58,56 @@ export const OrderModal = ({
   icon,
   onRequestClose,
 }: OrderModalProps) => {
+  const { removeOrder, setIsLoadingOrders, setOrders, isLoadingOrders } =
+    useOrder();
+
   if (!isOpen) return null;
+
+  const totalPrice = order.products.reduce(
+    (acc, { product, quantity }) => acc + quantity * product.price,
+    0
+  );
+
+  const handleCancelOrder = useCallback(async () => {
+    setIsLoadingOrders(true);
+
+    await app.delete(`/orders/${order._id}`);
+
+    setIsLoadingOrders(false);
+
+    removeOrder(order._id);
+
+    onRequestClose();
+
+    toast.success(ORDER_CANCELLED_MESSAGE(order.table), {
+      position: 'bottom-center',
+    });
+  }, [order._id, order.table, onRequestClose, removeOrder]);
+
+  const handleChangeStatus = useCallback(
+    async (status: Order['status']) => {
+      const nextStatus = ACTIONS[status].nextStatus as Order['status'];
+
+      setIsLoadingOrders(true);
+
+      await app.patch(`/orders/${order._id}`, { status: nextStatus });
+
+      setOrders((orders) =>
+        orders.map((o) =>
+          o._id === order._id ? { ...o, status: nextStatus } : o
+        )
+      );
+
+      setIsLoadingOrders(false);
+
+      onRequestClose();
+
+      toast.success(ORDER_MOVED_MESSAGE(order.table), {
+        position: 'bottom-center',
+      });
+    },
+    [onRequestClose, order._id, order.table]
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,24 +118,6 @@ export const OrderModal = ({
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onRequestClose]);
-
-  const totalPrice = order.products.reduce(
-    (acc, { product, quantity }) => acc + quantity * product.price,
-    0
-  );
-
-  const actions = {
-    emoji: {
-      WAITING: '🧑‍🍳',
-      IN_PRODUCTION: '🚚',
-      DONE: '✅',
-    },
-    text: {
-      WAITING: 'Iniciar Preparo',
-      IN_PRODUCTION: 'Finalizar Pedido',
-      DONE: '',
-    },
-  };
 
   return (
     <Overlay onClick={onRequestClose}>
@@ -99,12 +157,22 @@ export const OrderModal = ({
         </OrderDetails>
 
         <Actions>
-          <PrimaryButton disabled={order.status == 'DONE'}>
-            <span>{actions.emoji[order.status]}</span>
-            <span>{actions.text[order.status]}</span>
+          <PrimaryButton
+            disabled={order.status === 'DONE' || isLoadingOrders}
+            onClick={() => handleChangeStatus(order.status)}
+          >
+            <span>{ACTIONS[order.status].emoji}</span>
+            <span>{ACTIONS[order.status].text}</span>
           </PrimaryButton>
 
-          {order.status !== 'DONE' && <SecondaryButton>Cancel</SecondaryButton>}
+          {order.status !== 'DONE' && (
+            <SecondaryButton
+              onClick={handleCancelOrder}
+              disabled={isLoadingOrders}
+            >
+              Cancelar Pedido
+            </SecondaryButton>
+          )}
         </Actions>
       </ModalBody>
     </Overlay>
