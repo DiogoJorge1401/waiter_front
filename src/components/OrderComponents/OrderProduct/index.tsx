@@ -1,6 +1,7 @@
 import { Product } from '@/types/Order';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { Container, ProductDetails } from './styles';
+import { BASE_URL } from '@/configs/envs';
 
 interface OrderProductProps {
   quantity: number;
@@ -11,7 +12,7 @@ export const OrderProduct = ({ quantity, product }: OrderProductProps) => {
   return (
     <Container>
       <img
-        src={`https://waiterapi-production-5243.up.railway.app/uploads/${product.imagePath}`}
+        src={`${BASE_URL}/uploads/${product.imagePath}`}
         alt={product.name}
       />
 
